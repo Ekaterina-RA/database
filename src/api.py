@@ -1,0 +1,54 @@
+import requests
+
+
+class APIManager:
+    BASE_URL = "https://api.hh.ru"
+
+    @staticmethod
+    def get_companies(ids):
+        companies = []
+        for company_id in ids:
+            response = requests.get(f"{APIManager.BASE_URL}/employers/{company_id}")
+            if response.status_code == 200:
+                companies.append(response.json())
+            else:
+                print(
+                    f"Ошибка при получении компании с ID {company_id}: {response.status_code}"
+                )
+        return companies
+
+    @staticmethod
+    def get_vacancies(company_id):
+        response = requests.get(
+            f"{APIManager.BASE_URL}/vacancies?employer_id={company_id}"
+        )
+        if response.status_code == 200:
+            return response.json().get("items", [])
+        else:
+            print(
+                f"Ошибка при получении вакансий для компании с ID {company_id}: {response.status_code}"
+            )
+            return []
+
+
+# Пример использования
+if __name__ == "__main__":
+    company_ids = [
+        9140614,
+        11099814,
+        11674968,
+        11747243,
+        11826459,
+        5004072,
+        5775464,
+        4748227,
+        36227,
+        3643187,
+    ]
+    found_companies = APIManager.get_companies(company_ids)
+    print(found_companies)
+
+    if found_companies:
+        for company in found_companies:
+            vacancies = APIManager.get_vacancies(company["id"])
+            print(f"Вакансии для компании {company['name']}: {vacancies}")
