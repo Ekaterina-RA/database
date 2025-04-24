@@ -1,10 +1,12 @@
 import logging
+from typing import List, Optional, Tuple
 
 import psycopg2
 
 
 class DBManager:
-    def __init__(self, db_config):
+    def __init__(self, db_config: dict):
+        """Инициализация DBManager и подключение к базе данных."""
         logging.basicConfig(level=logging.DEBUG)
         # Логируем конфигурацию
         logging.debug(f"Connecting to database with config: {db_config}")
@@ -16,9 +18,11 @@ class DBManager:
         self.connection = psycopg2.connect(**db_config)
         self.cursor = self.connection.cursor()
 
-    def create_tables(self):
+    def create_tables(self) -> None:
+        """Создает таблицы employers и vacancies в базе данных, если они не существуют."""
         create_employers_table = """
-        CREATE TABLE IF NOT EXISTS employers (
+        DROP TABLE employers IF EXISTS
+        CREATE TABLE employers (
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
             vacancies_count INTEGER DEFAULT 0
@@ -26,7 +30,8 @@ class DBManager:
         """
 
         create_vacancies_table = """
-        CREATE TABLE IF NOT EXISTS vacancies (
+        DROP TABLE vacancies IF EXISTS
+        CREATE TABLE vacancies (
             id SERIAL PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
             salary_min INTEGER,
@@ -39,7 +44,8 @@ class DBManager:
         self.cursor.execute(create_vacancies_table)
         self.connection.commit()
 
-    def insert_employer(self, name):
+    def insert_employer(self, name: str) -> int:
+        """Метод вставляет нового работодателя в таблицу employers."""
         self.cursor.execute(
             "INSERT INTO employers (name) VALUES (%s) RETURNING id;", (name,)
         )
@@ -47,14 +53,23 @@ class DBManager:
         self.connection.commit()
         return employer_id
 
-    def insert_vacancy(self, title, salary_min, salary_max, employer_id):
+    def insert_vacancy(
+        self,
+        name: str,
+        salary_min: Optional[int],
+        salary_max: Optional[int],
+        employer_id: int,
+    ) -> None:
+        """метод вставляет новую вакансию в таблицу vacancies."""
+
         self.cursor.execute(
-            "INSERT INTO vacancies (title, salary_min, salary_max, employer_id) VALUES (%s, %s, %s, %s);",
-            (title, salary_min, salary_max, employer_id),
+            "INSERT INTO vacancies (name, salary_min, salary_max, employer_id) VALUES (%s, %s, %s, %s);",
+            (name, salary_min, salary_max, employer_id),
         )
         self.connection.commit()
 
-    def get_companies_and_vacancies_count(self):
+    def get_companies_and_vacancies_count(self) -> List:
+        """метод получает список компаний и количество их вакансий."""
         query = """
         SELECT e.name, COUNT(v.id) AS vacancies_count 
         FROM employers e 
@@ -65,7 +80,8 @@ class DBManager:
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def get_all_vacancies(self):
+    def get_all_vacancies(self) -> List:
+        """Метод получает все вакансии из базы данных."""
         query = """
         SELECT e.name AS company_name, v.title AS vacancy_title, v.salary_min AS min_salary,
                v.salary_max AS max_salary 
@@ -76,13 +92,15 @@ class DBManager:
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def get_avg_salary(self):
+    def get_avg_salary(self) -> Optional[float]:
+        """метод получает среднюю зарплату по всем вакансиям."""
         query = "SELECT AVG((salary_min + salary_max) / 2) FROM vacancies;"
 
         self.cursor.execute(query)
         return self.cursor.fetchone()[0]
 
-    def get_vacancies_with_higher_salary(self):
+    def get_vacancies_with_higher_salary(self) -> List:
+        """метод получает все вакансии с зарплатой выше средней"""
         avg_salary = self.get_avg_salary()
 
         query = """
@@ -91,8 +109,9 @@ class DBManager:
         self.cursor.execute(query, (avg_salary,))
         return self.cursor.fetchall()
 
-    def get_vacancies_with_keyword(self, keyword):
-        query = "SELECT * FROM vacancies WHERE title ILIKE %s;"
+    def get_vacancies_with_keyword(self, keyword: str) -> List:
+        """метод получает все вакансии по ключевому слову"""
+        query = "SELECT * FROM vacancies WHERE name ILIKE %s;"
         self.cursor.execute(query, ("%" + keyword + "%",))
         return self.cursor.fetchall()
 
@@ -105,8 +124,8 @@ class DBManager:
 if __name__ == "__main__":
     db_config = {
         "dbname": "headhunter",
-        "user": "user",
-        "password": "1234",
+        "user": "postgres",
+        "password": "Vcrsmart2025",
         "host": "localhost",
         "port": 5432,
     }
