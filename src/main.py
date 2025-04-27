@@ -1,57 +1,84 @@
-from src.DBManager import DBManager
+import logging
 
+from src.db_manager import DBManager
 
-def main(user_manager: DBManager):
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+
+# Конфигурация базы данных
+config = {
+    "dbname": "postgres",
+    "user": "postgres",
+    "password": "Vcrsmart2025",
+    "host": "localhost",
+    "port": 5432,
+}
+
+db_manager = DBManager(config)
+db_manager.create_database()
+
+try:
+    db_manager.connect()
+
+    # Создание таблиц
+    db_manager.create_tables()
 
     while True:
         print("1. Показать компании и количество вакансий")
         print("2. Показать среднюю зарплату")
         print("3. Показать вакансии по ключевому слову")
         print("4. Показать вакансии с зарплатой выше средней")
+        print("5. Показать все вакансии")
+        option = input("Выберите опцию (или 'exit' для выхода): ")
 
-        choice = input("Выберите опцию (или 'exit' для выхода): ")
+        if option == "1":
+            companies = db_manager.get_companies_and_vacancies_count()
+            for company in companies:
+                print(f"Компания: {company[0]}, Количество вакансий: {company[1]}")
 
-        if choice == "1":
-            companies = user_manager.get_companies_and_vacancies_count()
-            if companies:
-                for company in companies:
-                    print(f"Компания: {company[0]}, Вакансий: {company[1]}")
-            else:
-                print("Нет доступных компаний.")
-
-        elif choice == "2":
-            avg_salary = user_manager.get_avg_salary()
+        elif option == "2":
+            avg_salary = db_manager.get_avg_salary()
             print(f"Средняя зарплата: {avg_salary}")
 
-        elif choice == "3":
+        elif option == "3":
             keyword = input("Введите ключевое слово: ")
-            keyword_vacancies = user_manager.get_vacancies_with_keyword(keyword)
-            if keyword_vacancies:
-                for vacancy in keyword_vacancies:
-                    print(vacancy)
+            vacancies = db_manager.get_vacancies_with_keyword(keyword)
+            if vacancies:
+                for vacancy in vacancies:
+                    # Предполагаем, что vacancy - это кортеж или список с нужными данными
+                    title = vacancy[1]  # Название вакансии
+                    salary_min = vacancy[2]  # Минимальная зарплата
+                    salary_max = vacancy[3]  # Максимальная зарплата
+                    print(
+                        f"Вакансия: {title}, Минимальная зарплата: {salary_min}, Максимальная зарплата: {salary_max}"
+                    )
             else:
-                print(f"Нет вакансий по ключевому слову '{keyword}'.")
-        elif choice == "4":
-            higher_salary_vacancies = user_manager.get_vacancies_with_higher_salary()
-            for vacancy in higher_salary_vacancies:
+                print("Вакансии не найдены.")
+
+        elif option == "4":
+            high_salary_vacancies = db_manager.get_vacancies_with_higher_salary()
+            if high_salary_vacancies:
+                for vacancy in high_salary_vacancies:
+                    title = vacancy[1]  # Название вакансии
+                    salary_min = vacancy[2]  # Минимальная зарплата
+                    salary_max = vacancy[3]  # Максимальная зарплата
+                    print(
+                        f"Вакансия: {title}, Минимальная зарплата: {salary_min}, Максимальная зарплата: {salary_max}"
+                    )
+            else:
+                print("Вакансии с высокой зарплатой не найдены.")
+
+        elif option == "5":
+            all_vacancies = db_manager.get_all_vacancies()
+            for vacancy in all_vacancies:
                 print(vacancy)
 
-        elif choice.lower() == "exit":
+        elif option.lower() == "exit":
             break
 
+        else:
+            print("Неверный выбор. Пожалуйста, попробуйте снова.")
 
-# Пример использования
-if __name__ == "__main__":
-    db_config = {
-        "dbname": "headhunter",
-        "user": "postgres",
-        "password": "Vcrsmart2025",
-        "host": "localhost",
-        "port": 5432,
-    }
-
-    user_manager = DBManager(db_config)
-    try:
-        main(user_manager)
-    finally:
-        user_manager.close()
+finally:
+    # Закрытие соединения с базой данных
+    db_manager.close()
