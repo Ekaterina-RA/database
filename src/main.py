@@ -45,10 +45,9 @@ try:
             vacancies = db_manager.get_vacancies_with_keyword(keyword)
             if vacancies:
                 for vacancy in vacancies:
-                    # Предполагаем, что vacancy - это кортеж или список с нужными данными
-                    title = vacancy[1]  # Название вакансии
-                    salary_min = vacancy[2]  # Минимальная зарплата
-                    salary_max = vacancy[3]  # Максимальная зарплата
+                    title = vacancy[1]
+                    salary_min = vacancy[2]
+                    salary_max = vacancy[3]
                     print(
                         f"Вакансия: {title}, Минимальная зарплата: {salary_min}, Максимальная зарплата: {salary_max}"
                     )
@@ -59,9 +58,9 @@ try:
             high_salary_vacancies = db_manager.get_vacancies_with_higher_salary()
             if high_salary_vacancies:
                 for vacancy in high_salary_vacancies:
-                    title = vacancy[1]  # Название вакансии
-                    salary_min = vacancy[2]  # Минимальная зарплата
-                    salary_max = vacancy[3]  # Максимальная зарплата
+                    title = vacancy[1]
+                    salary_min = vacancy[2]
+                    salary_max = vacancy[3]
                     print(
                         f"Вакансия: {title}, Минимальная зарплата: {salary_min}, Максимальная зарплата: {salary_max}"
                     )

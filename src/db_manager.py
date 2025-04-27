@@ -222,10 +222,4 @@ class DBManager:
                 f"Ошибка при получении вакансий по ключевому слову '{keyword}': {e}"
             )
 
-    # def populate_data(self):
-    #     """Заполняет таблицы начальными данными."""
-    #     employer_id = self.insert_employer("КомпанияА")
-    #     if employer_id is not None:
-    #         self.insert_vacancy("Менеджер по продажам недвижимости", 0, 0, 119151358)
-    #         self.insert_vacancy("Преподаватель английского языка в Алматы", 100000, 150000, 119542107)
-    #         self.insert_vacancy("Менеджер по продажам", 50000, 80000, 117029209)
+
