@@ -1,5 +1,6 @@
 import logging
 
+from src.api import APIManager
 from src.db_manager import DBManager
 
 # Настройка логирования
@@ -14,6 +15,18 @@ config = {
     "port": 5432,
 }
 
+company_ids = [
+    9140614,
+    11099814,
+    11674968,
+    11747243,
+    11826459,
+    5004072,
+    5775464,
+    4748227,
+    36227,
+    3643187,
+]
 db_manager = DBManager(config)
 db_manager.create_database()
 
@@ -22,7 +35,33 @@ try:
 
     # Создание таблиц
     db_manager.create_tables()
+    vacancies_exist = db_manager.get_all_vacancies()
 
+    if not vacancies_exist:
+        print("В базе данных нет вакансий. Загружаем данные из API")
+
+        found_companies = APIManager.get_companies(company_ids)
+
+        if found_companies:
+            for company in found_companies:
+                employer_name = company.get("name")
+                employer_id = db_manager.insert_employer(employer_name)
+
+                if employer_id:
+                    vacancies = APIManager.get_vacancies(company["id"])
+
+                    for vacancy in vacancies:
+                        vacancy_name = vacancy.get("name")
+                        salary = vacancy.get("salary", {})
+                        salary_min = salary.get("from") if salary else None
+                        salary_max = salary.get("to") if salary else None
+
+                        db_manager.insert_vacancy(
+                            name=vacancy_name,
+                            salary_min=salary_min,
+                            salary_max=salary_max,
+                            employer_id=employer_id,
+                        )
     while True:
         print("1. Показать компании и количество вакансий")
         print("2. Показать среднюю зарплату")

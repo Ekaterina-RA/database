@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 import psycopg2
 from psycopg2 import sql
@@ -221,5 +221,3 @@ class DBManager:
             logging.error(
                 f"Ошибка при получении вакансий по ключевому слову '{keyword}': {e}"
             )
-
-
